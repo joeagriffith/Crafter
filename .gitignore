@@ -1,0 +1,28 @@
+# --- Python / env ---
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+build/
+dist/
+
+# --- Weights & Biases (top-level scratch dir) ---
+/wandb/
+
+# --- Heavy trial artifacts (keep metrics.json + ledger tracked!) ---
+# Model checkpoints / saved weights
+*.zip
+*.pt
+*.ckpt
+# TensorBoard event files
+events.out.tfevents.*
+# wandb local files written inside trial out dirs
+experiments/**/out/**/wandb/
+# raw training logs
+experiments/**/out/**/train.log
+
+# --- Keep these tracked (negations after the broad ignores above) ---
+!experiments/**/out/**/metrics.json
+!experiments/ledger.jsonl
+!**/.gitkeep

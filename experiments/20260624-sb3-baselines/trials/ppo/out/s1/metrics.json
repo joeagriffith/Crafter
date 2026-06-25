@@ -1,0 +1,15 @@
+{
+  "trial_id": "ppo/s1",
+  "experiment": "20260624-sb3-baselines",
+  "algo": "ppo",
+  "seed": 1,
+  "sweep_id": "bl0624",
+  "steps": 1000000,
+  "n_envs": 16,
+  "eval_reward": 5.9,
+  "eval_achievements": 10,
+  "wandb_url": "https://wandb.ai/joeagriffith-home/Crafter/runs/qc24c8zs",
+  "git_sha": "uncommitted",
+  "status": "ok",
+  "created": "2026-06-25"
+}

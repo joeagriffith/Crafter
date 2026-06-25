@@ -1,0 +1,32 @@
+==============================================
+Crafter baseline sweep
+started   : Wed Jun 24 11:46:17 PM PDT 2026
+steps/run : 1000000
+algos     : ppo a2c dqn
+seeds     : 0 1 2 3
+budget    : 32400s (stop launching new runs after this)
+==============================================
+[START] ppo-s0 @ 23:46:17
+[DONE ] ppo-s0 rc=0 (47m) [ppo-s0] eval mean reward    : 6.10 [ppo-s0] distinct achievements: 11 -> ['collect_sapling', 'collect_stone', 'collect_wood', 'defeat_skeleton', 'eat_cow', 'make_wood_pickaxe', 'make_wood_sword', 'place_plant', 'place_stone', 'place_table', 'wake_up'] 
+[START] a2c-s0 @ 00:33:29
+[DONE ] a2c-s0 rc=0 (49m) [a2c-s0] eval mean reward    : 4.70 [a2c-s0] distinct achievements: 9 -> ['collect_drink', 'collect_sapling', 'collect_wood', 'eat_cow', 'make_wood_pickaxe', 'make_wood_sword', 'place_plant', 'place_table', 'wake_up'] 
+[START] dqn-s0 @ 01:22:42
+[DONE ] dqn-s0 rc=0 (70m) [dqn-s0] eval mean reward    : 3.90 [dqn-s0] distinct achievements: 7 -> ['collect_drink', 'collect_sapling', 'collect_wood', 'eat_cow', 'place_plant', 'place_table', 'wake_up'] 
+[START] ppo-s1 @ 02:32:43
+[DONE ] ppo-s1 rc=0 (46m) [ppo-s1] eval mean reward    : 5.90 [ppo-s1] distinct achievements: 10 -> ['collect_drink', 'collect_sapling', 'collect_wood', 'defeat_skeleton', 'eat_cow', 'make_wood_pickaxe', 'make_wood_sword', 'place_plant', 'place_table', 'wake_up'] 
+[START] a2c-s1 @ 03:19:12
+[DONE ] a2c-s1 rc=0 (48m) [a2c-s1] eval mean reward    : 4.50 [a2c-s1] distinct achievements: 9 -> ['collect_drink', 'collect_sapling', 'collect_wood', 'eat_cow', 'make_wood_pickaxe', 'make_wood_sword', 'place_plant', 'place_table', 'wake_up'] 
+[START] dqn-s1 @ 04:07:54
+[DONE ] dqn-s1 rc=0 (69m) [dqn-s1] eval mean reward    : 3.30 [dqn-s1] distinct achievements: 7 -> ['collect_drink', 'collect_sapling', 'collect_wood', 'defeat_skeleton', 'defeat_zombie', 'place_plant', 'place_table'] 
+[START] ppo-s2 @ 05:17:35
+[DONE ] ppo-s2 rc=0 (48m) [ppo-s2] eval mean reward    : 4.30 [ppo-s2] distinct achievements: 10 -> ['collect_drink', 'collect_sapling', 'collect_wood', 'defeat_zombie', 'eat_cow', 'make_wood_pickaxe', 'make_wood_sword', 'place_plant', 'place_table', 'wake_up'] 
+[START] a2c-s2 @ 06:05:35
+[DONE ] a2c-s2 rc=0 (48m) [a2c-s2] eval mean reward    : 4.70 [a2c-s2] distinct achievements: 9 -> ['collect_drink', 'collect_sapling', 'collect_wood', 'eat_cow', 'make_wood_pickaxe', 'make_wood_sword', 'place_plant', 'place_table', 'wake_up'] 
+[START] dqn-s2 @ 06:54:34
+[DONE ] dqn-s2 rc=0 (70m) [dqn-s2] eval mean reward    : 3.30 [dqn-s2] distinct achievements: 8 -> ['collect_drink', 'collect_sapling', 'collect_wood', 'defeat_skeleton', 'defeat_zombie', 'place_plant', 'place_table', 'wake_up'] 
+[START] ppo-s3 @ 08:05:04
+[DONE ] ppo-s3 rc=0 (46m) [ppo-s3] eval mean reward    : 6.70 [ppo-s3] distinct achievements: 10 -> ['collect_drink', 'collect_sapling', 'collect_wood', 'defeat_zombie', 'eat_cow', 'make_wood_pickaxe', 'make_wood_sword', 'place_plant', 'place_table', 'wake_up'] 
+[SKIP ] a2c-s3 (past launch deadline)
+[SKIP ] dqn-s3 (past launch deadline)
+==============================================
+sweep finished : Thu Jun 25 08:51:46 AM PDT 2026

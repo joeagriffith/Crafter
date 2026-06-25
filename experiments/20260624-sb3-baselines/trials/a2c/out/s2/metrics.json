@@ -1,0 +1,15 @@
+{
+  "trial_id": "a2c/s2",
+  "experiment": "20260624-sb3-baselines",
+  "algo": "a2c",
+  "seed": 2,
+  "sweep_id": "bl0624",
+  "steps": 1000000,
+  "n_envs": 16,
+  "eval_reward": 4.7,
+  "eval_achievements": 9,
+  "wandb_url": "https://wandb.ai/joeagriffith-home/Crafter/runs/nvektmrc",
+  "git_sha": "uncommitted",
+  "status": "ok",
+  "created": "2026-06-25"
+}
