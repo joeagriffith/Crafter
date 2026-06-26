@@ -127,7 +127,22 @@ def main():
         os.path.dirname(EXP_DIR), "ledger.jsonl"),
         help="Path to the append-only ledger.jsonl.")
     ap.add_argument("--no-wandb", action="store_true")
+    # --no-record: profiling-only mode. Skip W&B init, the final eval, the
+    # metrics.json write AND the ledger append, so a profiling run never
+    # pollutes experiments/ledger.jsonl. Implies --no-wandb.
+    ap.add_argument("--no-record", action="store_true",
+                    help="Profiling mode: skip wandb, eval, metrics.json and "
+                         "ledger append (keeps ledger.jsonl clean).")
+    # --profile-torch DIR: wrap a short model.learn under torch.profiler and
+    # exit. Writes a chrome/tensorboard trace + a key_averages() table to DIR.
+    ap.add_argument("--profile-torch", default=None, metavar="DIR",
+                    help="Run a short torch.profiler-instrumented learn into "
+                         "DIR, dump the op table, then exit (no record).")
     args = ap.parse_args()
+
+    # --no-record implies no W&B (and the torch profiler path never records).
+    if args.no_record or args.profile_torch:
+        args.no_wandb = True
 
     sweep_id = args.sweep_id or f"adhoc-{datetime.now():%m%d-%H%M}"
     algo = args.algo
@@ -164,6 +179,45 @@ def main():
           f"on {model.device} ...")
     callback = WandbCallback(verbose=1) if run else None
 
+    # --- torch profiler path: short instrumented learn, dump table, exit. -----
+    if args.profile_torch:
+        prof_dir = os.path.abspath(args.profile_torch)
+        os.makedirs(prof_dir, exist_ok=True)
+        from torch.profiler import (ProfilerActivity, profile, schedule,
+                                     tensorboard_trace_handler)
+        activities = [ProfilerActivity.CPU]
+        if torch.cuda.is_available():
+            activities.append(ProfilerActivity.CUDA)
+        # wait/warmup/active steps -> a handful of profiled rollout+update cycles.
+        sched = schedule(wait=1, warmup=1, active=3, repeat=1)
+        prof_steps = min(args.steps, max(hp.get("n_steps", 256) * args.envs * 6,
+                                         3000))
+        with profile(activities=activities, schedule=sched,
+                     on_trace_ready=tensorboard_trace_handler(prof_dir),
+                     record_shapes=True, with_stack=False) as prof:
+            class _Step:
+                def _on_step(self_inner):
+                    prof.step()
+                    return True
+            from stable_baselines3.common.callbacks import BaseCallback
+
+            class StepCb(BaseCallback):
+                def _on_step(self_cb):
+                    prof.step()
+                    return True
+
+            model.learn(total_timesteps=prof_steps, callback=StepCb())
+        sort_key = ("self_cuda_time_total" if torch.cuda.is_available()
+                    else "self_cpu_time_total")
+        table = prof.key_averages().table(sort_by=sort_key, row_limit=20)
+        table_path = os.path.join(prof_dir, "key_averages.txt")
+        with open(table_path, "w") as f:
+            f.write(f"sorted by {sort_key}\n\n{table}\n")
+        print(table)
+        print(f"[{name}] torch profiler trace + table -> {prof_dir}")
+        venv.close()
+        return
+
     status = "ok"
     try:
         model.learn(total_timesteps=args.steps, callback=callback)
@@ -175,6 +229,12 @@ def main():
         model_path = os.path.join(out_dir, "checkpoint")
         model.save(model_path)
         print(f"[{name}] saved model -> {model_path}.zip")
+
+    # --no-record (profiling): stop here. No eval, no metrics.json, no ledger.
+    if args.no_record:
+        venv.close()
+        print(f"[{name}] --no-record: skipped eval/metrics/ledger.")
+        return
 
     mean_r, achievements = evaluate(model)
     print(f"[{name}] eval mean reward    : {mean_r:.2f}")

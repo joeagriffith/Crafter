@@ -1,3 +1,7 @@
+# --- Profiling toolkit outputs ---
+profile/out/*
+!profile/out/.gitkeep
+
 # --- Python / env ---
 .venv/
 __pycache__/
@@ -7,8 +11,14 @@ __pycache__/
 build/
 dist/
 
-# --- Weights & Biases (top-level scratch dir) ---
-/wandb/
+# --- Weights & Biases (local run files; matches root and any nested out/wandb/) ---
+wandb/
+
+# --- Vendored OSS impls (reproduced via setup.sh, not committed wholesale) ---
+# r2dreamer is cloned + pinned by experiments/20260625-dreamerv3/setup.sh
+third_party/r2dreamer/
+# isolated per-impl venvs (also covered by the broad .venv/ above)
+**/.venv/
 
 # --- Heavy trial artifacts (keep metrics.json + ledger tracked!) ---
 # Model checkpoints / saved weights
@@ -19,8 +29,17 @@ dist/
 events.out.tfevents.*
 # wandb local files written inside trial out dirs
 experiments/**/out/**/wandb/
-# raw training logs
+# raw training logs (r2dreamer writes console.log + metrics.jsonl; we keep only our metrics.json)
 experiments/**/out/**/train.log
+experiments/**/out/**/console.log
+experiments/**/out/**/metrics.jsonl
+# sweep orchestration logs (regenerated each launch)
+experiments/**/sweep.out
+experiments/**/sweep_summary*.txt
+# Hydra per-run config snapshots (regenerated; config is defined by our scripts)
+experiments/**/out/**/.hydra/
+# ttlcd sidecar runtime log (the .py itself is committed tooling)
+experiments/**/ttlcd_sidecar.log
 
 # --- Keep these tracked (negations after the broad ignores above) ---
 !experiments/**/out/**/metrics.json

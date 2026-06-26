@@ -28,7 +28,14 @@ def init_run(*, algo, seed, sweep_id, exp_type, project, config,
     name : override the default ``{sweep_id}-{algo}-s{seed}`` name.
     notes : free-text run notes.
     """
+    import os
     import wandb  # absolute import -> the real pip package
+
+    # wandb writes its local files to ``{dir}/wandb/``; if ``dir`` doesn't exist
+    # yet it silently falls back to the cwd (repo root). Create it so runs stay
+    # co-located with the trial that produced them.
+    if out_dir:
+        os.makedirs(out_dir, exist_ok=True)
 
     run = wandb.init(
         project=project,

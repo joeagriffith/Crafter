@@ -1,6 +1,6 @@
 # Repository Structure
 
-This repo is organized for **mass experimentation** with a **prototype-then-promote**
+This repo is organized for **mass experimentation** with an **experiment-then-promote**
 workflow and **agent-friendly** conventions (everything queryable from the filesystem,
 no UI required). Inspired by the Codeca `optim-loop` / experiment pattern.
 
@@ -16,22 +16,20 @@ csrc/                  # CUDA / C++ sources (.cu/.cpp) compiled into crafter_rl.
 experiments/           # MASS EXPERIMENTATION — one dated directory per experiment
   ledger.jsonl         #   append-only global index, one flat JSON object per trial
   _template/           #   copy this to start a new experiment
-  <YYYYMMDD-slug>/     #   a concrete experiment (a "trial suite")
-prototypes/            # free-form sandbox for new ideas — no test bar, fast iteration
+  <YYYYMMDD-slug>/     #   a concrete experiment (a "trial suite") — also where new ideas are prototyped
 third_party/           # vendored OSS impls that aren't pip-installable (+ thin adapters)
 docs/                  # the conventions you are reading
 runs are NOT stored at top level — every run writes into the trial that produced it.
 ```
 
-## The three code tiers
+## The two code tiers
 
 | Tier | Where | Bar to entry | Lifetime |
 |------|-------|--------------|----------|
 | **Promoted** | `crafter_rl/` | conforms to interfaces, smoke-tested, reproduces a baseline | permanent, imported by everything |
-| **Experiment** | `experiments/<dated>/` | follows the trial contract | kept as the historical record |
-| **Prototype** | `prototypes/` | none — scratch | until promoted or deleted |
+| **Experiment** | `experiments/<dated>/` | follows the trial contract (new ideas are prototyped here) | kept as the historical record |
 
-The promotion path (prototype → experiment-proven → `crafter_rl/`) is documented in
+The promotion path (experiment-proven → `crafter_rl/`) is documented in
 [promotion-checklist.md](promotion-checklist.md).
 
 ## Why this shape

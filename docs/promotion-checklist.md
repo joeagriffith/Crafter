@@ -1,8 +1,9 @@
-# Prototype → Promote Checklist
+# Experiment → Promote Checklist
 
-Code matures in three stages: **`prototypes/`** (scratch) → proven in an
-**`experiments/<dated>/`** trial → **`crafter_rl/`** (shared, imported everywhere).
-Promote only when a thing has earned permanence; until then, keep it in an experiment.
+Code matures in two stages: proven in an **`experiments/<dated>/`** trial →
+**`crafter_rl/`** (shared, imported everywhere). Prototyping happens directly inside
+the experiment dir. Promote only when a thing has earned permanence; until then, keep
+it in an experiment.
 
 ## When to promote
 A component is a promotion candidate when it is reused (or clearly will be) across more than
@@ -26,8 +27,8 @@ one experiment, AND it has proven correct on a real run.
 2. One small commit per structural change (move, rename, delete legacy) — keep diffs reviewable.
 3. Replace the experiment's local copy with an import from `crafter_rl/`; the originating
    trial becomes the reference example in that module's docstring.
-4. Delete the now-dead prototype/legacy files — don't leave two copies.
+4. Delete the now-dead legacy files — don't leave two copies.
 
 ## What NOT to promote
 - One-off experiment glue, plotting scratch, anything used by a single trial.
-- Unproven ideas — those stay in `prototypes/` until an experiment validates them.
+- Unproven ideas — those stay in their experiment dir until a trial validates them.
