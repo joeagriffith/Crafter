@@ -40,6 +40,8 @@ experiments/**/sweep_summary*.txt
 experiments/**/out/**/.hydra/
 # ttlcd sidecar runtime log (the .py itself is committed tooling)
 experiments/**/ttlcd_sidecar.log
+# wandb live streamer runtime log (the .py itself is committed tooling)
+experiments/**/wandb_streamer.log
 
 # --- Keep these tracked (negations after the broad ignores above) ---
 !experiments/**/out/**/metrics.json

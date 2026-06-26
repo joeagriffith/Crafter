@@ -83,7 +83,7 @@ def maybe_wandb(out_dir, eval_records, *, seed, sweep_id, steps, eval_reward,
     ``{sweep_id}/{algo_label}`` -- this keeps each size's runs distinguishable.
     """
     try:
-        from crafter_rl.wandb import init_run
+        from crafter_rl.wandb import init_run, run_id
         import wandb
     except Exception as e:
         print(f"[report] W&B unavailable ({e}); skipping.")
@@ -97,26 +97,40 @@ def maybe_wandb(out_dir, eval_records, *, seed, sweep_id, steps, eval_reward,
         "crafter_version": _ver("crafter"),
         "torch_version": _ver("torch"),
     }
+    # Deterministic id shared with the live streamer: passing it with
+    # resume="allow" JOINS the streamer's already-created run (or creates it if
+    # the streamer never ran) instead of spawning a duplicate run.
+    rid = run_id(sweep_id, algo_label, seed)
     try:
         run = init_run(algo=algo_label, seed=seed, sweep_id=sweep_id, exp_type="baseline",
                        project="crafter", config=config, out_dir=out_dir,
+                       id=rid, resume="allow",
                        name=f"{sweep_id}-{algo_label}-s{seed}",
                        notes=f"DreamerV3 ({model_size}, r2dreamer rep_loss=dreamer) Crafter baseline")
     except Exception as e:
         print(f"[report] init_run failed ({e}); skipping W&B.")
         return None
 
-    # Replay every eval record so W&B shows the full eval curve, not just a point.
-    for rec in eval_records:
-        step = int(rec.get("step", 0))
-        payload = {f"eval/{k.split('/', 1)[1]}": float(v)
-                   for k, v in rec.items() if k.startswith("episode/eval_")}
-        if payload:
-            wandb.log(payload, step=step)
-    run.summary["eval/mean_reward"] = eval_reward
-    run.summary["eval/achievements"] = eval_achievements
+    # Replay every eval record so W&B shows the full eval curve, not just a
+    # point. Guard the whole replay+finalise: a W&B/network hiccup here must
+    # NEVER block the metrics.json + ledger writes that follow in main().
     url = getattr(run, "url", None)
-    run.finish()
+    try:
+        for rec in eval_records:
+            step = int(rec.get("step", 0))
+            payload = {f"eval/{k.split('/', 1)[1]}": float(v)
+                       for k, v in rec.items() if k.startswith("episode/eval_")}
+            if payload:
+                wandb.log(payload, step=step)
+        run.summary["eval/mean_reward"] = eval_reward
+        run.summary["eval/achievements"] = eval_achievements
+    except Exception as e:
+        print(f"[report] W&B replay failed ({e}); metrics/ledger unaffected.")
+    finally:
+        try:
+            run.finish()
+        except Exception:
+            pass
     return url
 
 
@@ -161,11 +175,16 @@ def main():
 
     wandb_url = None
     if args.wandb:
-        wandb_url = maybe_wandb(
-            out_dir, eval_records, seed=args.seed, sweep_id=sweep_id, steps=steps,
-            eval_reward=eval_reward, eval_achievements=eval_achievements,
-            git_sha=git_sha, pinned_sha=args.pinned_sha,
-            algo_label=algo_label, model_size=model_size)
+        # Belt-and-braces: metrics.json + ledger are the critical deliverable,
+        # so no W&B failure mode may prevent them from being written below.
+        try:
+            wandb_url = maybe_wandb(
+                out_dir, eval_records, seed=args.seed, sweep_id=sweep_id, steps=steps,
+                eval_reward=eval_reward, eval_achievements=eval_achievements,
+                git_sha=git_sha, pinned_sha=args.pinned_sha,
+                algo_label=algo_label, model_size=model_size)
+        except Exception as e:
+            print(f"[report] W&B step failed ({e}); continuing to metrics+ledger.")
 
     metrics = {
         "trial_id": f"{algo_label}/s{args.seed}",
