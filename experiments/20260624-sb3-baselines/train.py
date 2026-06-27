@@ -26,6 +26,7 @@ from stable_baselines3.common.vec_env import (DummyVecEnv, SubprocVecEnv,
 from wandb.integration.sb3 import WandbCallback
 
 from crafter_rl.env import CrafterGym
+from crafter_rl.eval import evaluate as shared_evaluate
 from crafter_rl.utils import (append_ledger, get_git_sha, pkg_version,
                               write_metrics)
 from crafter_rl.wandb import init_run
@@ -88,23 +89,18 @@ def build_model(algo, seed, logdir, n_envs, hp):
     return model, venv
 
 
-def evaluate(model, episodes=5, seed=987_654):
-    import numpy as np
-    env = CrafterGym(seed=seed)
-    rewards, achievements = [], set()
-    for _ in range(episodes):
-        obs, _ = env.reset()
-        done, total, info = False, 0.0, {}
-        while not done:
-            action, _ = model.predict(obs, deterministic=True)
-            obs, r, term, trunc, info = env.step(int(action))
-            total += r
-            done = term or trunc
-        rewards.append(total)
-        for name, count in info.get("achievements", {}).items():
-            if count > 0:
-                achievements.add(name)
-    return float(np.mean(rewards)), sorted(achievements)
+def evaluate(model, n_episodes=10):
+    """Standardized eval via the shared ``crafter_rl.eval`` module.
+
+    Wraps the SB3 model's greedy ``predict`` as a plain ``act_fn(obs) -> int`` so
+    SB3 baselines are scored on exactly the same code path (same seeds, same
+    canonical Crafter score, same per-achievement success rates) as every other
+    algorithm. ``n_episodes`` defaults to 10 to match the DreamerV3 eval.
+    """
+    def act_fn(obs):
+        action, _ = model.predict(obs, deterministic=True)
+        return int(action)
+    return shared_evaluate(act_fn, n_episodes=n_episodes)
 
 
 def main():
@@ -236,16 +232,31 @@ def main():
         print(f"[{name}] --no-record: skipped eval/metrics/ledger.")
         return
 
-    mean_r, achievements = evaluate(model)
-    print(f"[{name}] eval mean reward    : {mean_r:.2f}")
-    print(f"[{name}] distinct achievements: {len(achievements)} -> {achievements}")
+    # Standardized eval: 10 episodes (matches DreamerV3) on the shared eval path.
+    ev = evaluate(model, n_episodes=10)
+    mean_r = ev["return_mean"]
+    crafter_sc = ev["crafter_score"]
+    n_distinct = ev["achievements_unlocked"]            # legacy back-compat
+    success_rates = ev["achievement_success_rates"]     # {name: fraction}
+    print(f"[{name}] eval mean return     : {mean_r:.2f} "
+          f"(+/- {ev['return_std']:.2f}, n={ev['n_episodes']})")
+    print(f"[{name}] crafter score        : {crafter_sc:.2f}")
+    print(f"[{name}] distinct achievements: {n_distinct}")
 
     wandb_url = run.get_url() if run else None
     if run:
-        wandb.log({"eval/mean_reward": mean_r,
-                   "eval/distinct_achievements": len(achievements)})
+        log = {"eval/mean_reward": mean_r,
+               "eval/return_std": ev["return_std"],
+               "eval/crafter_score": crafter_sc,
+               "eval/distinct_achievements": n_distinct}
+        # per-achievement success rates (fraction 0..1) -> W&B for parity with
+        # the canonical Crafter per-achievement breakdown.
+        for ach_name, rate in success_rates.items():
+            log[f"eval/achievement/{ach_name}"] = rate
+        wandb.log(log)
         wandb.summary["eval/mean_reward"] = mean_r
-        wandb.summary["eval/distinct_achievements"] = len(achievements)
+        wandb.summary["eval/crafter_score"] = crafter_sc
+        wandb.summary["eval/distinct_achievements"] = n_distinct
         run.finish()
     venv.close()
 
@@ -257,8 +268,11 @@ def main():
         "sweep_id": sweep_id,
         "steps": args.steps,
         "n_envs": args.envs,
-        "eval_reward": round(mean_r, 4),
-        "eval_achievements": len(achievements),
+        "eval_reward": round(mean_r, 4),            # comparable mean return
+        "crafter_score": round(crafter_sc, 4),      # canonical Crafter score
+        "eval_achievements": n_distinct,            # distinct count (back-compat)
+        "achievement_success_rates": {k: round(v, 4)
+                                      for k, v in success_rates.items()},
         "wandb_url": wandb_url,
         "git_sha": get_git_sha(),
         "status": status,
