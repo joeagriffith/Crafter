@@ -11,8 +11,9 @@ __pycache__/
 build/
 dist/
 
-# --- Weights & Biases (local run files; matches root and any nested out/wandb/) ---
-wandb/
+# --- Weights & Biases local run files (NOT the crafter_rl/wandb/ source package!) ---
+/wandb/
+experiments/**/wandb/
 
 # --- Vendored OSS impls (reproduced via setup.sh, not committed wholesale) ---
 # r2dreamer is cloned + pinned by experiments/20260625-dreamerv3/setup.sh
