@@ -28,7 +28,16 @@ def run_id(sweep_id, algo_label, seed):
     display name is deliberate -- the id is the stable join key across the live
     streamer and the post-hoc finaliser, the name is just what humans read.
     """
+    import os
+
     raw = f"{sweep_id}-{algo_label}-seed{seed}"
+    # Optional per-session suffix (env ``WANDB_RUN_SUFFIX``) appended to the id
+    # ONLY -- never the display name. Lets a fresh session reuse the same human
+    # name while getting a brand-new, unique id (avoids the wandb tombstone-hang
+    # that reusing a deleted id triggers). Default empty -> fully backward-compat.
+    suffix = os.environ.get("WANDB_RUN_SUFFIX", "")
+    if suffix:
+        raw = f"{raw}-{suffix}"
     return re.sub(r"[^A-Za-z0-9._-]", "-", raw)
 
 
