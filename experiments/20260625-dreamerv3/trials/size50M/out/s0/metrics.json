@@ -1,0 +1,16 @@
+{
+  "trial_id": "dreamerv3-size50M/s0",
+  "experiment": "20260625-dreamerv3",
+  "algo": "dreamerv3-size50M",
+  "model_size": "size50M",
+  "seed": 0,
+  "sweep_id": "dv30625",
+  "steps": 1000000,
+  "n_envs": 1,
+  "eval_reward": 10.6,
+  "eval_achievements": 14,
+  "wandb_url": "https://wandb.ai/joeagriffith-home/Crafter/runs/dv30625-dreamerv3-size50M-seed0-s2",
+  "git_sha": "efa49e9",
+  "status": "ok",
+  "created": "2026-06-27"
+}
