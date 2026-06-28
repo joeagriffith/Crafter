@@ -1,3 +1,6 @@
+# --- Literature knowledge base: keep all .md, exclude heavy PDFs ---
+knowledge_base/papers/**/*.pdf
+
 # --- Profiling toolkit outputs ---
 profile/out/*
 !profile/out/.gitkeep
